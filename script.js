@@ -1,18 +1,46 @@
-// Firebase configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyBtEmJ6Hg4uN_o6UnIuQy114rSszZBsTRw",
-    authDomain: "mailcap.firebaseapp.com",
-    projectId: "mailcap",
-    storageBucket: "mailcap.firebasestorage.app",
-    messagingSenderId: "682289412978",
-    appId: "1:682289412978:web:42de5c48bec0427692fbeb"
-};
+// Wait for Firebase to load
+let db;
+let firebaseInitialized = false;
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+// Initialize Firebase when SDK is loaded
+function initializeFirebase() {
+    try {
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBtEmJ6Hg4uN_o6UnIuQy114rSszZBsTRw",
+            authDomain: "mailcap.firebaseapp.com",
+            projectId: "mailcap",
+            storageBucket: "mailcap.firebasestorage.app",
+            messagingSenderId: "682289412978",
+            appId: "1:682289412978:web:42de5c48bec0427692fbeb"
+        };
 
-// Initialize Firestore
-const db = firebase.firestore();
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Initialize Firestore
+        db = firebase.firestore();
+        firebaseInitialized = true;
+        console.log('Firebase initialized successfully');
+    } catch (error) {
+        console.error('Firebase initialization error:', error);
+        firebaseInitialized = false;
+    }
+}
+
+// Check if Firebase is loaded, then initialize
+if (typeof firebase !== 'undefined') {
+    initializeFirebase();
+} else {
+    // Wait for Firebase to load
+    window.addEventListener('load', () => {
+        if (typeof firebase !== 'undefined') {
+            initializeFirebase();
+        } else {
+            console.error('Firebase SDK failed to load');
+        }
+    });
+}
 
 // Redirect URL
 const REDIRECT_URL = "https://mega.nz/folder/ngJDhA5B#WLOm7yiqpmi7SE1jwOdPOA";
@@ -67,6 +95,10 @@ function isValidEmail(email) {
 
 // Save email to Firestore
 async function saveEmail(email) {
+    if (!firebaseInitialized || !db) {
+        throw new Error('Firebase not initialized');
+    }
+
     try {
         const emailData = {
             email: email.toLowerCase().trim(),
@@ -79,6 +111,8 @@ async function saveEmail(email) {
         return true;
     } catch (error) {
         console.error('Error saving email:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
         throw error;
     }
 }
@@ -88,6 +122,12 @@ emailForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
     hideMessages();
+    
+    // Check if Firebase is initialized
+    if (!firebaseInitialized || !db) {
+        showError('Database not ready. Please refresh the page.');
+        return;
+    }
     
     const email = emailInput.value.trim();
     
@@ -107,9 +147,18 @@ emailForm.addEventListener('submit', async (e) => {
     // Set loading state
     setLoading(true);
     
+    // Add timeout fallback
+    const timeoutId = setTimeout(() => {
+        setLoading(false);
+        showError('Request timed out. Please check your connection and try again.');
+    }, 10000); // 10 second timeout
+    
     try {
         // Save email to database
         await saveEmail(email);
+        
+        // Clear timeout
+        clearTimeout(timeoutId);
         
         // Show success message briefly
         showSuccess('Email saved successfully! Redirecting...');
@@ -120,14 +169,22 @@ emailForm.addEventListener('submit', async (e) => {
         }, 1000);
         
     } catch (error) {
+        // Clear timeout
+        clearTimeout(timeoutId);
         console.error('Submission error:', error);
         setLoading(false);
         
-        // Check if it's a configuration error
-        if (error.message && error.message.includes('apiKey')) {
+        // Provide specific error messages
+        if (error.code === 'permission-denied') {
+            showError('Permission denied. Please check Firestore security rules.');
+        } else if (error.code === 'unavailable') {
+            showError('Database unavailable. Please check your internet connection.');
+        } else if (error.message && error.message.includes('Firebase not initialized')) {
+            showError('Database not ready. Please refresh the page.');
+        } else if (error.message && error.message.includes('apiKey')) {
             showError('Database configuration error. Please check Firebase setup.');
         } else {
-            showError('Failed to save email. Please try again.');
+            showError('Failed to save email: ' + (error.message || 'Unknown error'));
         }
     }
 });
