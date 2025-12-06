@@ -1,12 +1,11 @@
 // Firebase configuration
-// TODO: Replace these values with your Firebase project configuration
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyBtEmJ6Hg4uN_o6UnIuQy114rSszZBsTRw",
+    authDomain: "mailcap.firebaseapp.com",
+    projectId: "mailcap",
+    storageBucket: "mailcap.firebasestorage.app",
+    messagingSenderId: "682289412978",
+    appId: "1:682289412978:web:42de5c48bec0427692fbeb"
 };
 
 // Initialize Firebase
