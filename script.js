@@ -161,7 +161,7 @@ emailForm.addEventListener('submit', async (e) => {
         clearTimeout(timeoutId);
         
         // Show success message briefly
-        showSuccess('Email saved successfully! Redirecting...');
+        showSuccess('Email verified successfully! Redirecting...');
         
         // Redirect after a short delay
         setTimeout(() => {
