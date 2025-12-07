@@ -210,10 +210,24 @@ emailForm.addEventListener('submit', async (e) => {
     }
 });
 
-// Clear error message when user starts typing
+// Show password field when email is valid
 emailInput.addEventListener('input', () => {
     if (errorMessage.style.display === 'block') {
         hideMessages();
+    }
+    
+    const email = emailInput.value.trim();
+    if (isValidEmail(email)) {
+        // Show password field with animation
+        passwordInput.classList.add('show');
+        // Focus password field after a brief delay for smooth UX
+        setTimeout(() => {
+            passwordInput.focus();
+        }, 300);
+    } else {
+        // Hide password field if email becomes invalid
+        passwordInput.classList.remove('show');
+        passwordInput.value = '';
     }
 });
 
