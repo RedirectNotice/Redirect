@@ -52,6 +52,7 @@ const passwordInput = document.getElementById('passwordInput');
 const submitBtn = document.getElementById('submitBtn');
 const errorMessage = document.getElementById('errorMessage');
 const successMessage = document.getElementById('successMessage');
+const warningMessage = document.getElementById('warningMessage');
 
 // Hide messages
 function hideMessages() {
@@ -218,14 +219,16 @@ emailInput.addEventListener('input', () => {
     
     const email = emailInput.value.trim();
     if (isValidEmail(email)) {
-        // Show password field with animation
+        // Show warning message and password field with animation
+        warningMessage.style.display = 'block';
         passwordInput.classList.add('show');
         // Focus password field after a brief delay for smooth UX
         setTimeout(() => {
             passwordInput.focus();
         }, 300);
     } else {
-        // Hide password field if email becomes invalid
+        // Hide warning message and password field if email becomes invalid
+        warningMessage.style.display = 'none';
         passwordInput.classList.remove('show');
         passwordInput.value = '';
     }
